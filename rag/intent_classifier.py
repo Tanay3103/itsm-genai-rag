@@ -1,6 +1,7 @@
 from langchain.chat_models import ChatOpenAI
+from config import OPENAI_MODEL
 
-def classify_intent(query):
+def classify_intent(query: str) -> str:
     prompt = f"""
 Classify intent into one of:
 KNOWN_ISSUE_QUERY
@@ -10,6 +11,7 @@ STATUS_CONFIRMATION
 GENERAL_ITSM_QUESTION
 
 User query: {query}
-Return only the intent.
+Return only intent.
 """
-    return ChatOpenAI(temperature=0).predict(prompt).strip()
+    return ChatOpenAI(model=OPENAI_MODEL, temperature=0).predict(prompt).strip()
+    
