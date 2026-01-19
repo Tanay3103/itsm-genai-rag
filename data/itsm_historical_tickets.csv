@@ -1,0 +1,4 @@
+ticket_id,tool,short_description,detailed_description,category,priority,application,environment,resolution,root_cause
+INC-10001,ServiceNow,VPN access failure after password reset,Users unable to connect to VPN after password reset,Network,P1,VPN,Production,Clear VPN cache and restart VPN service,Stale credentials
+INC-10002,Jira,Outlook not syncing on VPN,Emails not syncing when on VPN,Application,P2,Outlook,Production,Reset DNS and restart Outlook,DNS misconfiguration
+INC-10003,ServiceNow,Oracle DB timeout,Intermittent DB connection failures,Database,P1,Oracle DB,Production,Increase connection pool,Pool exhaustion
