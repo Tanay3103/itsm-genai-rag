@@ -1,2 +1,3 @@
-def confidence_from_score(score):
-    return round(score * 100, 2)
+def compute_confidence(score: float) -> int:
+    return int(score * 100)
+    
