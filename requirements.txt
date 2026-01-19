@@ -1,0 +1,9 @@
+streamlit
+langchain
+openai
+qdrant-client
+pandas
+tiktoken
+python-dotenv
+pypdf
+reportlab
