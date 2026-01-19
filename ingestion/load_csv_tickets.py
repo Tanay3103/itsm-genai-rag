@@ -6,8 +6,7 @@ from config import TICKET_COLLECTION
 
 df = pd.read_csv("data/itsm_historical_tickets.csv")
 
-texts, metadatas = [], []
-
+texts, metas = [], []
 for _, r in df.iterrows():
     texts.append(
         f"Issue: {r.short_description}\n"
@@ -15,14 +14,14 @@ for _, r in df.iterrows():
         f"Root Cause: {r.root_cause}\n"
         f"Resolution: {r.resolution}"
     )
-    metadatas.append(r.to_dict())
+    metas.append(r.to_dict())
 
 Qdrant.from_texts(
     texts,
     OpenAIEmbeddings(),
-    metadatas=metadatas,
+    metadatas=metas,
     client=get_qdrant_client(),
     collection_name=TICKET_COLLECTION
 )
 
-print("✅ Tickets loaded")
+print("Tickets ingested")

@@ -13,4 +13,4 @@ Qdrant.from_documents(
     collection_name=KNOWLEDGE_COLLECTION
 )
 
-print("✅ Knowledge PDF loaded")
+print("Knowledge PDF ingested")
