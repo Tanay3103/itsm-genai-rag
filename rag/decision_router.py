@@ -1,6 +1,14 @@
-def route(ticket_results, kb_results, t_thresh, kb_thresh):
-    if ticket_results and ticket_results[0].score >= t_thresh:
-        return "TICKET"
-    if kb_results and kb_results[0].score >= kb_thresh:
-        return "KNOWLEDGE"
-    return "NEW"
+from config import TICKET_SIM_THRESHOLD, KB_SIM_THRESHOLD
+
+def route_decision(ticket_results, kb_results):
+    if ticket_results:
+        doc, score = ticket_results[0]
+        if score >= TICKET_SIM_THRESHOLD:
+            return "TICKET", doc, score
+
+    if kb_results:
+        doc, score = kb_results[0]
+        if score >= KB_SIM_THRESHOLD:
+            return "KNOWLEDGE", doc, score
+
+    return "NEW", None, 0.0
