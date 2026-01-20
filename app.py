@@ -1,66 +1,71 @@
+import uuid
+from datetime import datetime
+
 import streamlit as st
 
-from rag.intent_classifier import classify_intent
-from rag.ticket_retriever import search_tickets
-from rag.knowledge_retriever import search_knowledge
-from rag.decision_router import route_decision
-from utils.confidence import compute_confidence
-from utils.auto_ingest import ingest_ticket
-from mock_itsm.servicenow_api import create_servicenow_ticket
+from config.agent import USER_AVATAR
+from conversation.history import render_history
+from conversation.smalltalk import is_gratitude, is_greeting
+from handlers.confirmation import handle_confirmation
+from handlers.gratitude import handle_gratitude
+from handlers.greetings import handle_greeting
+from handlers.tickets import handle_ticket_lookup
+from handlers.triage import handle_triage
 from memory.conversation import ConversationMemory
+from ui.sidebar import render_sidebar
+from utils.bootstrap_qdrant import bootstrap_qdrant
 
-st.set_page_config(page_title="AI ITSM Copilot", layout="wide")
-st.title("🤖 AI ITSM Copilot")
+st.set_page_config(page_title="AI ITSM Agent", page_icon="🤖", layout="wide")
+st.title("AI ITSM Agent")
 
-memory = ConversationMemory()
 
-if st.sidebar.button("🧹 Clear Conversation"):
-    memory.clear()
-    st.experimental_rerun()
+@st.cache_resource
+def init():
+    bootstrap_qdrant()
 
-for msg in memory.get():
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
 
-user_query = st.chat_input("Describe your IT issue...")
+init()
 
-if user_query:
-    memory.add_user(user_query)
-    with st.chat_message("user"):
-        st.markdown(user_query)
+if "session_id" not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())
 
-    intent = classify_intent(user_query)
+if "memory" not in st.session_state:
+    st.session_state.memory = ConversationMemory(st.session_state.session_id)
 
-    ticket_results = search_tickets(user_query)
-    kb_results = search_knowledge(user_query)
+memory = st.session_state.memory
 
-    decision, doc, score = route_decision(ticket_results, kb_results)
+render_sidebar(memory)
+render_history(memory)
 
-    if decision == "TICKET":
-        response = (
-            f"✅ **This issue has occurred before**\n\n"
-            f"**Confidence:** {compute_confidence(score)}%\n\n"
-            f"{doc.page_content}"
-        )
+user_query = st.chat_input("How can I help you today?")
 
-    elif decision == "KNOWLEDGE":
-        response = (
-            f"ℹ️ **This issue is documented in internal knowledge**\n\n"
-            f"**Confidence:** {compute_confidence(score)}%\n\n"
-            f"{doc.page_content}"
-        )
+if not user_query:
+    st.stop()
 
-    else:
-        ticket = create_servicenow_ticket({"description": user_query})
-        ingest_ticket(user_query, {"ticket_id": ticket["id"], "status": "Open"})
+# 1️⃣ Immediately show user message (chat-app behavior)
+with st.chat_message("user", avatar=USER_AVATAR):
+    st.caption(datetime.utcnow().strftime("%H:%M"))
+    st.markdown(user_query)
 
-        response = (
-            "❌ **I couldn’t find this issue in ticket history or knowledge base.**\n\n"
-            f"🎫 **Ticket Created:** `{ticket['id']}`\n\n"
-            "This issue has been saved for future reference."
-        )
+# 2️⃣ Persist message
+memory.add_user(user_query)
 
-    with st.chat_message("assistant"):
-        st.markdown(response)
+# 3️⃣ Handle conversation
+if is_greeting(user_query):
+    handle_greeting(memory)
+    st.rerun()
 
-    memory.add_ai(response)
+if is_gratitude(user_query):
+    handle_gratitude(memory)
+    st.rerun()
+
+if handle_confirmation(user_query, memory):
+    st.rerun()
+
+if handle_ticket_lookup(user_query):
+    st.rerun()
+
+handle_triage(user_query, memory)
+
+# 4️⃣ Force rerender so history updates immediately
+st.rerun()

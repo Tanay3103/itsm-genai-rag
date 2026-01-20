@@ -1,14 +1,21 @@
-from config import TICKET_SIM_THRESHOLD, KB_SIM_THRESHOLD
+def decide_next_action(ticket_hits, knowledge_hits, state):
+    """
+    Decide next step based on confidence, attempts, and info completeness
+    """
 
-def route_decision(ticket_results, kb_results):
-    if ticket_results:
-        doc, score = ticket_results[0]
-        if score >= TICKET_SIM_THRESHOLD:
-            return "TICKET", doc, score
+    if state["mode"] == "CONFIRM":
+        return "WAIT_CONFIRMATION"
 
-    if kb_results:
-        doc, score = kb_results[0]
-        if score >= KB_SIM_THRESHOLD:
-            return "KNOWLEDGE", doc, score
+    if ticket_hits and ticket_hits[0][1] > 0.8:
+        return "TRY_EXISTING_FIX"
 
-    return "NEW", None, 0.0
+    if knowledge_hits and knowledge_hits[0][1] > 0.7:
+        return "TRY_KB_FIX"
+
+    if len(state["answers"]) < 2:
+        return "ASK_MORE_QUESTIONS"
+
+    if len(state["solutions_tried"]) >= 2:
+        return "ESCALATE"
+
+    return "TRY_KB_FIX"

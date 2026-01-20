@@ -1,13 +1,19 @@
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores import Qdrant
-from utils.qdrant_client import get_qdrant_client
-from config import TICKET_COLLECTION
+from langchain_qdrant import QdrantVectorStore
 
-def ingest_ticket(text, metadata):
-    Qdrant.from_texts(
+from config.config import QDRANT_URL, TICKET_COLLECTION
+from embeddings.embeddings import get_embeddings
+
+
+def ingest_new_ticket(ticket):
+    text = f"""
+Issue: {ticket['description']}
+Resolution: {ticket.get('resolution', 'Pending')}
+"""
+
+    QdrantVectorStore.from_texts(
         texts=[text],
-        embedding=OpenAIEmbeddings(),
-        metadatas=[metadata],
-        client=get_qdrant_client(),
-        collection_name=TICKET_COLLECTION
+        embedding=get_embeddings(),
+        metadatas=[ticket],
+        url=QDRANT_URL,
+        collection_name=TICKET_COLLECTION,
     )

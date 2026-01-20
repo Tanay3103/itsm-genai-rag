@@ -1,16 +1,15 @@
-from langchain.document_loaders import PyPDFLoader
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores import Qdrant
-from utils.qdrant_client import get_qdrant_client
-from config import KNOWLEDGE_COLLECTION
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_qdrant import QdrantVectorStore
 
-docs = PyPDFLoader("data/itsm_context_knowledge.pdf").load()
+from config.config import KNOWLEDGE_COLLECTION, QDRANT_URL
+from embeddings.embeddings import get_embeddings
 
-Qdrant.from_documents(
-    docs,
-    OpenAIEmbeddings(),
-    client=get_qdrant_client(),
-    collection_name=KNOWLEDGE_COLLECTION
-)
+embeddings = get_embeddings()
 
-print("Knowledge PDF ingested")
+
+def load_knowledge_pdf():
+    docs = PyPDFLoader("data/itsm_context_knowledge.pdf").load()
+
+    QdrantVectorStore.from_documents(
+        docs, embedding=embeddings, url=QDRANT_URL, collection_name=KNOWLEDGE_COLLECTION
+    )

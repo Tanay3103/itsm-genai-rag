@@ -1,0 +1,13 @@
+/.ai
+/.idea
+/.memory
+/config/__pycache__
+/conversation/__pycache__
+/embeddings/__pycache__
+/handlers/__pycache__
+/ingestion/__pycache__
+/memory/__pycache__
+/mock_itsm/__pycache__
+/rag/__pycache__
+/ui/__pycache__
+/utils/__pycache__
